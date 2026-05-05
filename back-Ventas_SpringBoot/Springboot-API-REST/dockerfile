@@ -1,0 +1,14 @@
+FROM maven:3.8.4-openjdk-17-slim AS build
+WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean package -DskipTests
+
+
+# Use jammy para mac pero si da problemas cambiar a alpine
+FROM eclipse-temurin:17-jre-jammy
+RUN groupadd -r spring && useradd -r -g spring spring
+USER spring:spring
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
+ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -1,0 +1,71 @@
+services:
+  mysql-db:
+    image: mysql:8.0
+    container_name: despachos-db
+    environment:
+      - MYSQL_ROOT_PASSWORD=admin123 
+      - MYSQL_DATABASE=despachos
+    volumes:
+      - dbdata:/var/lib/mysql        
+    ports:
+      - "3307:3306"
+    networks:
+      - despachos-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  backend-despachos:
+    build: ./back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
+    container_name: ms-despachos
+    ports:
+      - "18080:18080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://despachos-db:3306/despachos
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=admin123
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    networks:
+      - despachos-net
+
+  backend-ventas:
+    build: ./back-Ventas_SpringBoot/Springboot-API-REST
+    container_name: ms-ventas
+    ports:
+      - "18081:18081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://despachos-db:3306/db_ventas?createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=admin123
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    networks:
+      - despachos-net
+
+  frontend-react:
+    build:
+      context: ./front_despacho
+      args:
+      # Cambiar LOCALHOST a variables de entorno: {AWS_IP}
+      - VITE_API_VENTAS=http://localhost:18081
+      - VITE_API_DESPACHOS=http://localhost:18080
+    container_name: ms-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend-despachos
+    networks:
+      - despachos-net
+
+volumes:
+  dbdata:
+
+networks:
+  despachos-net:
+    driver: bridge

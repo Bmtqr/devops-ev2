@@ -1,0 +1,12 @@
+# Node
+node_modules/
+dist/
+
+# Java
+target/
+*.class
+*.jar
+
+# Docker & OS
+.DS_Store
+dbdata/
