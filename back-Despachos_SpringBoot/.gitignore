@@ -32,3 +32,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+.DS_Store
+node_modules/
+dist/
+target/
+*.class
+*.jar
+.mvn/
